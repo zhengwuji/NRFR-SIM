@@ -78,10 +78,13 @@ object CarrierConfigManager {
 
     private fun carrierConfigLoader(): ICarrierConfigLoader = ICarrierConfigLoader.Stub.asInterface(
         ShizukuBinderWrapper(
-            TelephonyFrameworkInitializer
-                .getTelephonyServiceManager()
-                .carrierConfigServiceRegisterer
-                .get()
+            // get() 可能在服务尚未就绪时返回 null;此时无法继续,直接抛出让上层提示用户
+            checkNotNull(
+                TelephonyFrameworkInitializer
+                    .getTelephonyServiceManager()
+                    .carrierConfigServiceRegisterer
+                    .get()
+            ) { "CarrierConfig service binder not available (Shizuku not running?)" }
         )
     )
 
