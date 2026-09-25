@@ -20,6 +20,21 @@ class MainActivity : ComponentActivity() {
     private var isShizukuReady by mutableStateOf(false)
     private var showAbout by mutableStateOf(false)
 
+    // 持有监听器引用,onDestroy 里才能真正移除(匿名 lambda 每次创建都是新对象)
+    private val requestPermissionResultListener =
+        Shizuku.OnRequestPermissionResultListener { _, grantResult ->
+            isShizukuReady = grantResult == PackageManager.PERMISSION_GRANTED
+            if (!isShizukuReady) {
+                Toast.makeText(this, R.string.shizuku_permission_toast, Toast.LENGTH_LONG).show()
+            }
+        }
+    private val binderReceivedListener = Shizuku.OnBinderReceivedListener {
+        checkShizukuStatus()
+    }
+    private val binderDeadListener = Shizuku.OnBinderDeadListener {
+        isShizukuReady = false
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -31,18 +46,10 @@ class MainActivity : ComponentActivity() {
         // 检查 Shizuku 状态
         checkShizukuStatus()
 
-        // 添加 Shizuku 权限监听器
-        Shizuku.addRequestPermissionResultListener { _, grantResult ->
-            isShizukuReady = grantResult == PackageManager.PERMISSION_GRANTED
-            if (!isShizukuReady) {
-                Toast.makeText(this, "需要 Shizuku 权限才能运行", Toast.LENGTH_LONG).show()
-            }
-        }
-
-        // 添加 Shizuku 绑定监听器
-        Shizuku.addBinderReceivedListener {
-            checkShizukuStatus()
-        }
+        // 注册 Shizuku 监听器(含 binder 死亡监听,Shizuku 被杀时回到未就绪界面)
+        Shizuku.addRequestPermissionResultListener(requestPermissionResultListener)
+        Shizuku.addBinderReceivedListener(binderReceivedListener)
+        Shizuku.addBinderDeadListener(binderDeadListener)
 
         setContent {
             NrfrTheme {
@@ -59,7 +66,7 @@ class MainActivity : ComponentActivity() {
 
     private fun checkShizukuStatus() {
         isShizukuReady = if (Shizuku.getBinder() == null) {
-            Toast.makeText(this, "请先安装并启用 Shizuku", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, R.string.shizuku_not_installed_toast, Toast.LENGTH_LONG).show()
             false
         } else {
             val hasPermission = Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
@@ -72,7 +79,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        Shizuku.removeRequestPermissionResultListener { _, _ -> }
-        Shizuku.removeBinderReceivedListener { }
+        Shizuku.removeRequestPermissionResultListener(requestPermissionResultListener)
+        Shizuku.removeBinderReceivedListener(binderReceivedListener)
+        Shizuku.removeBinderDeadListener(binderDeadListener)
     }
 }

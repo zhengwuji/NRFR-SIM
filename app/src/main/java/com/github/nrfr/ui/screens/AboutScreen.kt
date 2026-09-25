@@ -7,13 +7,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.github.nrfr.R
@@ -34,16 +35,19 @@ fun AboutScreen(onBack: () -> Unit) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_launcher_foreground),
                             modifier = Modifier.size(48.dp),
-                            contentDescription = "App Icon",
+                            contentDescription = stringResource(R.string.app_icon_desc),
                             tint = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("关于")
+                        Text(stringResource(R.string.about_title))
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "返回")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.back)
+                        )
                     }
                 }
             )
@@ -71,26 +75,21 @@ fun AboutScreen(onBack: () -> Unit) {
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            "功能介绍",
+                            stringResource(R.string.about_features_title),
                             style = MaterialTheme.typography.titleMedium
                         )
                         Text(
-                            "• 修改 SIM 卡的国家码配置，可用于解除部分应用的地区限制\n" +
-                                    "• 帮助使用海外 SIM 卡时获得更好的本地化体验\n" +
-                                    "• 解决部分应用识别 SIM 卡地区错误的问题\n" +
-                                    "• 无需 Root 权限，无需修改系统文件，安全且可随时还原\n" +
-                                    "• 支持 Android 8 及以上系统版本\n" +
-                                    "• 支持双卡设备，可分别配置不同国家码",
+                            stringResource(R.string.about_features_body),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
                 }
 
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
                 // 作者信息
                 Text(
-                    "作者信息",
+                    stringResource(R.string.about_author_title),
                     style = MaterialTheme.typography.titleMedium
                 )
                 Card(
@@ -100,9 +99,9 @@ fun AboutScreen(onBack: () -> Unit) {
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text("作者: Antkites")
+                        Text(stringResource(R.string.about_author_name))
                         Text(
-                            "GitHub: Ackites",
+                            stringResource(R.string.about_github),
                             modifier = Modifier.clickable {
                                 context.startActivity(
                                     Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Ackites"))
@@ -111,7 +110,7 @@ fun AboutScreen(onBack: () -> Unit) {
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            "X (Twitter): @actkites",
+                            stringResource(R.string.about_x),
                             modifier = Modifier.clickable {
                                 context.startActivity(
                                     Intent(
@@ -125,11 +124,11 @@ fun AboutScreen(onBack: () -> Unit) {
                     }
                 }
 
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
                 // 开源信息
                 Text(
-                    "开源信息",
+                    stringResource(R.string.about_opensource_title),
                     style = MaterialTheme.typography.titleMedium
                 )
                 Card(
@@ -140,12 +139,12 @@ fun AboutScreen(onBack: () -> Unit) {
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            "本项目已在 GitHub 开源",
+                            stringResource(R.string.about_opensource_body),
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
                         )
                         Text(
-                            "访问项目主页",
+                            stringResource(R.string.about_project_home),
                             color = MaterialTheme.colorScheme.primary,
                             textAlign = TextAlign.Center,
                             modifier = Modifier
@@ -166,7 +165,7 @@ fun AboutScreen(onBack: () -> Unit) {
 
                 // 版权信息
                 Text(
-                    "© 2024 Antkites. All rights reserved.",
+                    stringResource(R.string.about_copyright),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

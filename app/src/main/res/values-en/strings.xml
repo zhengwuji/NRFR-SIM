@@ -1,0 +1,46 @@
+<resources>
+    <string name="app_name">Nrfr</string>
+
+    <!-- Main screen -->
+    <string name="sim_card_select_label">Select SIM card</string>
+    <string name="no_sim_detected">No SIM card detected</string>
+    <string name="no_override_config">No override config</string>
+    <string name="config_read_error">Failed to read config. Please check that Shizuku is running</string>
+    <string name="current_config_title">Current config</string>
+    <string name="loading">Loading…</string>
+    <string name="country_code_select_label">Select country code</string>
+    <string name="custom">Custom</string>
+    <string name="custom_country_code_label">Custom country code (2 letters)</string>
+    <string name="carrier_select_label">Select carrier</string>
+    <string name="custom_carrier_name_label">Custom carrier name</string>
+    <string name="entry_country_code">Country code</string>
+    <string name="entry_carrier_name">Carrier name</string>
+    <string name="reset_button">Reset</string>
+    <string name="save_button">Apply</string>
+    <string name="config_saved">Config applied</string>
+    <string name="config_reset">Config reset</string>
+    <string name="save_failed">Apply failed: %1$s</string>
+    <string name="reset_failed">Reset failed: %1$s</string>
+    <string name="load_failed">Load failed: %1$s</string>
+
+    <!-- Shizuku -->
+    <string name="shizuku_required_title">Shizuku permission required</string>
+    <string name="shizuku_required_body">Please install and start Shizuku, then restart the app</string>
+    <string name="shizuku_permission_toast">Shizuku permission is required to run</string>
+    <string name="shizuku_not_installed_toast">Please install and start Shizuku first</string>
+
+    <!-- About -->
+    <string name="about_title">About</string>
+    <string name="back">Back</string>
+    <string name="app_icon_desc">App icon</string>
+    <string name="about_features_title">Features</string>
+    <string name="about_features_body">• Override SIM card country code to lift region restrictions in some apps\n• Better localization experience when using overseas SIM cards\n• Fix apps that detect the SIM region incorrectly\n• No root required, no system files modified, safe and reversible\n• Supports Android 8 and above\n• Supports dual SIM devices with per-slot config</string>
+    <string name="about_author_title">Author</string>
+    <string name="about_author_name">Author: Antkites</string>
+    <string name="about_github">GitHub: Ackites</string>
+    <string name="about_x">X (Twitter): @actkites</string>
+    <string name="about_opensource_title">Open source</string>
+    <string name="about_opensource_body">This project is open source on GitHub</string>
+    <string name="about_project_home">Visit project homepage</string>
+    <string name="about_copyright">© 2024 Antkites. All rights reserved.</string>
+</resources>

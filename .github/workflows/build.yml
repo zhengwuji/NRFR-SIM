@@ -1,14 +1,29 @@
-name: Build Release
+name: Build APK
 
+# 每次代码变动(push)自动编译 APK 并发布到 Releases;
+# 仅修改 README/文档不触发。手动触发(workflow_dispatch)始终可用。
 on:
   push:
-    tags:
-      - "v*"
+    branches:
+      - "**"
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
   workflow_dispatch:
 
-# 添加权限配置
 permissions:
   contents: write
+
+# 同一分支的新 push 会取消仍在运行的旧构建
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Shizuku v13.6.0(最新版,支持 Android 16 QPR1),固定版本 + SHA-256 保证可复现
+  SHIZUKU_VERSION: "13.6.0"
+  SHIZUKU_APK: "shizuku-v13.6.0.r1086.2650830c-release.apk"
+  SHIZUKU_SHA256: "6e273ab0e991c4e79bc8b1bbb9b9dd739ccac1a8712a541a214078886b7b790f"
 
 jobs:
   build:
@@ -18,147 +33,110 @@ jobs:
         with:
           fetch-depth: 0
 
-      # 获取版本号和提交信息
-      - name: Get Version Info
+      # 版本单源:基础版本号取自 gradle.properties;
+      # push 构建追加构建号(如 1.1.0-r42),tag 构建直接用 tag 名。
+      - name: Resolve Version
         id: version
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/}
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-
-          if git rev-list --tags --max-count=1 > /dev/null 2>&1; then
-              LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || git rev-list --max-parents=0 HEAD)
-
-              # 获取所有提交并过滤掉CI相关提交和文档提交
-              ALL_COMMITS=$(git log --pretty=format:"%h %s (%an)" $LAST_TAG..HEAD | grep -v -E "ci:|docs:" || true)
-
-              # 分别获取不同类型的提交
-              FEAT_COMMITS=$(echo "$ALL_COMMITS" | grep "^[a-f0-9]\+ feat:" || true)
-              FIX_COMMITS=$(echo "$ALL_COMMITS" | grep "^[a-f0-9]\+ fix:" || true)
-              OTHER_COMMITS=$(echo "$ALL_COMMITS" | grep -v "^[a-f0-9]\+ \(feat:\|fix:\)" || true)
-
-              # 组装changelog
-              CHANGELOG=""
-              if [ ! -z "$FEAT_COMMITS" ]; then
-                  CHANGELOG+="### 功能改进\n$FEAT_COMMITS\n"
-              fi
-              if [ ! -z "$FIX_COMMITS" ]; then
-                  CHANGELOG+="### 问题修复\n$FIX_COMMITS\n"
-              fi
-              if [ ! -z "$OTHER_COMMITS" ]; then
-                  CHANGELOG+="### 其他更新\n$OTHER_COMMITS"
-              fi
-          else
-              CHANGELOG="### 首次发布\n$(git log --pretty=format:"- %h %s (%an)" | grep -v "ci:" || true)"
-          fi
-
-          # 如果changelog为空，添加默认信息
-          if [ -z "$CHANGELOG" ]; then
-              CHANGELOG="### 无更新内容"
-          fi
-
-          # 输出
-          echo -e "$CHANGELOG"
-
-          # 将 changelog 写入文件
-          echo -e "$CHANGELOG" > CHANGELOG.md
         shell: bash
+        run: |
+          BASE=$(grep -E '^APP_VERSION_NAME=' gradle.properties | cut -d '=' -f2 | tr -d ' \r')
+          BASE_CODE=$(grep -E '^APP_VERSION_CODE=' gradle.properties | cut -d '=' -f2 | tr -d ' \r')
+          if [ -z "$BASE" ]; then echo "APP_VERSION_NAME missing in gradle.properties"; exit 1; fi
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/}"
+            VERSION_CODE="$BASE_CODE"
+          else
+            VERSION="${BASE}-r${GITHUB_RUN_NUMBER}"
+            VERSION_CODE=$(( BASE_CODE * 1000 + GITHUB_RUN_NUMBER ))
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "code=${VERSION_CODE}" >> $GITHUB_OUTPUT
+          echo "Building ${VERSION} (versionCode ${VERSION_CODE})"
 
-      # 设置 Java 环境
+      # 生成中文更新内容:取上个 tag 以来的提交(排除 ci:/docs: 提交)
+      - name: Generate Changelog
+        id: changelog
+        shell: bash
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -n "$PREV_TAG" ]; then
+            RAW=$(git log --pretty=format:"- %s" "$PREV_TAG"..HEAD)
+          else
+            RAW=$(git log --pretty=format:"- %s" -20)
+          fi
+          COMMITS=$(echo "$RAW" | grep -v -E "^- (ci:|docs:|chore\(ci\))" || true)
+          if [ -z "$COMMITS" ]; then
+            COMMITS="- 例行构建与维护更新"
+          fi
+          {
+            echo "## 📦 更新内容"
+            echo ""
+            echo "$COMMITS"
+            echo ""
+            echo "## ℹ️ 构建信息"
+            echo ""
+            echo "- **版本**: ${{ steps.version.outputs.version }}"
+            echo "- **构建号**: #${{ github.run_number }}"
+            echo "- **提交**: ${{ github.sha }}"
+            echo "- **分支**: ${{ github.ref_name }}"
+            echo ""
+            echo "## 📲 安装说明"
+            echo ""
+            echo "1. 下载下方的 \`nrfr-${{ steps.version.outputs.version }}.apk\` 安装到手机"
+            echo "2. 安装并启动 [Shizuku](https://github.com/RikkaApps/Shizuku/releases/latest),按应用内提示完成授权"
+            echo "3. 打开 Nrfr,选择 SIM 卡并设置目标国家码,点击「保存生效」"
+            echo ""
+            echo "详细说明见项目 README。"
+          } > 更新内容.md
+          echo "---- 更新内容.md ----"
+          cat 更新内容.md
+
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: "21"
 
-      # 设置 Android SDK
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      # 下载替换 android.jar
+      # 下载含隐藏 API 的 android.jar(compileSdk 36 / Android 16)
       - name: Download android.jar
         run: |
-          mkdir -p $ANDROID_HOME/platforms/android-34
-          curl -L https://raw.githubusercontent.com/Reginer/aosp-android-jar/refs/heads/main/android-34/android.jar -o $ANDROID_HOME/platforms/android-34/android.jar
+          mkdir -p $ANDROID_HOME/platforms/android-36
+          curl -L https://raw.githubusercontent.com/Reginer/aosp-android-jar/refs/heads/main/android-36/android.jar -o $ANDROID_HOME/platforms/android-36/android.jar
         shell: bash
 
-      # 构建 Android APK
-      - name: Build Android APK
+      # 构建 release APK(无 keystore 时 build.gradle.kts 自动回退 debug 签名)
+      - name: Build APK
         run: |
           gradle wrapper
           chmod +x ./gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleRelease --no-daemon -PAPP_VERSION_NAME=${{ steps.version.outputs.version }} -PAPP_VERSION_CODE=${{ steps.version.outputs.code }}
         shell: bash
 
-      # 设置 Go 环境
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-
-      # 设置 Node.js 环境
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "21"
-
-      # 安装 Wails
-      - name: Install Wails
-        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
-
-      # 构建 Wails 应用
-      - name: Build Wails App
-        run: |
-          cd nrfr-client/frontend
-          npm install
-          cd ..
-          wails build
-        shell: bash
-
-      # 下载最新的 Shizuku APK
+      # 下载固定版本 Shizuku 并校验 SHA-256(打包进附件目录,便于一起分发)
       - name: Download Shizuku APK
-        run: |
-          mkdir -p nrfr-client/build/bin/resources
-          curl -L $(curl -s https://api.github.com/repos/RikkaApps/Shizuku/releases/latest | grep "browser_download_url.*apk" | cut -d '"' -f 4) -o nrfr-client/build/bin/resources/shizuku.apk
         shell: bash
-
-      # 复制 Android APK
-      - name: Copy Android APK
         run: |
-          cp app/build/outputs/apk/debug/app-debug.apk nrfr-client/build/bin/resources/nrfr.apk
-          cp app/build/outputs/apk/debug/app-debug.apk nrfr-${{ steps.version.outputs.version }}.apk
-        shell: bash
+          mkdir -p dist
+          curl -L "https://github.com/RikkaApps/Shizuku/releases/download/v${{ env.SHIZUKU_VERSION }}/${{ env.SHIZUKU_APK }}" \
+            -o dist/shizuku-${{ env.SHIZUKU_VERSION }}.apk
+          echo "${{ env.SHIZUKU_SHA256 }}  dist/shizuku-${{ env.SHIZUKU_VERSION }}.apk" | sha256sum -c -
 
-      # 下载 platform-tools
-      - name: Download platform-tools
+      - name: Stage APK
+        shell: bash
         run: |
-          mkdir -p nrfr-client/build/bin/platform-tools
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            curl -L https://dl.google.com/android/repository/platform-tools-latest-windows.zip -o platform-tools.zip
-          elif [ "$RUNNER_OS" == "Linux" ]; then
-            curl -L https://dl.google.com/android/repository/platform-tools-latest-linux.zip -o platform-tools.zip
-          else
-            curl -L https://dl.google.com/android/repository/platform-tools-latest-darwin.zip -o platform-tools.zip
-          fi
-          unzip platform-tools.zip
-          cp -r platform-tools/* nrfr-client/build/bin/platform-tools/
-          rm -rf platform-tools platform-tools.zip
-        shell: bash
+          cp app/build/outputs/apk/release/app-release.apk nrfr-${{ steps.version.outputs.version }}.apk
 
-      # 打包发布文件
-      - name: Create Release Archive
-        run: |
-          cd nrfr-client/build/bin
-          7z a "../../nrfr-${{ steps.version.outputs.version }}-release.zip" ./*
-        shell: bash
-
-      # 创建 Release
       - name: Create Release
         uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
         with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Nrfr ${{ steps.version.outputs.version }}
+          body_path: 更新内容.md
           files: |
-            nrfr-client/nrfr-${{ steps.version.outputs.version }}-release.zip
             nrfr-${{ steps.version.outputs.version }}.apk
-          body_path: CHANGELOG.md
+            dist/shizuku-${{ env.SHIZUKU_VERSION }}.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

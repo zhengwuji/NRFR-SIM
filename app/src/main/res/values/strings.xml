@@ -1,3 +1,46 @@
 <resources>
     <string name="app_name">Nrfr</string>
+
+    <!-- 主界面 -->
+    <string name="sim_card_select_label">选择SIM卡</string>
+    <string name="no_sim_detected">未检测到 SIM 卡</string>
+    <string name="no_override_config">无覆盖配置</string>
+    <string name="config_read_error">配置读取失败,请检查 Shizuku 是否正常运行</string>
+    <string name="current_config_title">当前配置</string>
+    <string name="loading">正在加载…</string>
+    <string name="country_code_select_label">选择国家码</string>
+    <string name="custom">自定义</string>
+    <string name="custom_country_code_label">自定义国家码 (2位字母)</string>
+    <string name="carrier_select_label">选择运营商</string>
+    <string name="custom_carrier_name_label">自定义运营商名称</string>
+    <string name="entry_country_code">国家码</string>
+    <string name="entry_carrier_name">运营商名称</string>
+    <string name="reset_button">还原设置</string>
+    <string name="save_button">保存生效</string>
+    <string name="config_saved">设置已保存</string>
+    <string name="config_reset">设置已还原</string>
+    <string name="save_failed">保存失败: %1$s</string>
+    <string name="reset_failed">还原失败: %1$s</string>
+    <string name="load_failed">加载失败: %1$s</string>
+
+    <!-- Shizuku -->
+    <string name="shizuku_required_title">需要 Shizuku 权限</string>
+    <string name="shizuku_required_body">请安装并启用 Shizuku,然后重启应用</string>
+    <string name="shizuku_permission_toast">需要 Shizuku 权限才能运行</string>
+    <string name="shizuku_not_installed_toast">请先安装并启用 Shizuku</string>
+
+    <!-- 关于页 -->
+    <string name="about_title">关于</string>
+    <string name="back">返回</string>
+    <string name="app_icon_desc">应用图标</string>
+    <string name="about_features_title">功能介绍</string>
+    <string name="about_features_body">• 修改 SIM 卡的国家码配置,可用于解除部分应用的地区限制\n• 帮助使用海外 SIM 卡时获得更好的本地化体验\n• 解决部分应用识别 SIM 卡地区错误的问题\n• 无需 Root 权限,无需修改系统文件,安全且可随时还原\n• 支持 Android 8 及以上系统版本\n• 支持双卡设备,可分别配置不同国家码</string>
+    <string name="about_author_title">作者信息</string>
+    <string name="about_author_name">作者: Antkites</string>
+    <string name="about_github">GitHub: Ackites</string>
+    <string name="about_x">X (Twitter): @actkites</string>
+    <string name="about_opensource_title">开源信息</string>
+    <string name="about_opensource_body">本项目已在 GitHub 开源</string>
+    <string name="about_project_home">访问项目主页</string>
+    <string name="about_copyright">© 2024 Antkites. All rights reserved.</string>
 </resources>

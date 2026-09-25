@@ -1,21 +1,26 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# Nrfr release 混淆规则
+# 本应用通过 Shizuku 直连系统 binder 服务,依赖 AIDL 桩类与隐藏 API,
+# R8 默认裁剪/重命名会直接导致运行时 ClassNotFound 或 binder 调用失败。
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# --- AIDL binder 桩:Parcel 反序列化按类名反射构造,禁止重命名/裁剪 ---
+-keep class com.android.internal.telephony.** { *; }
+-keep class android.telephony.TelephonyFrameworkInitializer { *; }
+-keep class android.app.IActivityManager* { *; }
+-keep class android.app.UiAutomationConnection { *; }
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# --- Shizuku ---
+-keep class rikka.shizuku.** { *; }
+-keep class moe.shizuku.** { *; }
+-dontwarn rikka.**
+-dontwarn moe.shizuku.**
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# --- HiddenApiBypass(内部大量反射/Unsafe) ---
+-keep class org.lsposed.hiddenapibypass.** { *; }
+-dontwarn org.lsposed.hiddenapibypass.**
+
+# --- Compose ---
+-dontwarn androidx.compose.**
+
+# 保留行号便于崩溃定位
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile

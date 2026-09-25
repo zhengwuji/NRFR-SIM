@@ -39,9 +39,6 @@ func main() {
 			DisableWindowIcon:   false,
 			Theme:               windows.SystemDefault,
 		},
-		Debug: options.Debug{
-			OpenInspectorOnStartup: true,
-		},
 	})
 
 	if err != nil {

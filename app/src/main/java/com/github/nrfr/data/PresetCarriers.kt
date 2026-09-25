@@ -4,7 +4,8 @@ object PresetCarriers {
     data class CarrierPreset(
         val name: String,
         val displayName: String,
-        val region: String
+        val region: String,
+        val isCustom: Boolean = false
     )
 
     val presets = listOf(
@@ -129,6 +130,6 @@ object PresetCarriers {
         CarrierPreset("TIM", "TIM Brasil", "BR"),
 
         // 自定义选项
-        CarrierPreset("自定义", "", "")
+        CarrierPreset("自定义", "", "", isCustom = true)
     )
 } 
